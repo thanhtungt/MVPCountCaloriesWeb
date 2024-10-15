@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meal Planner</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f7fa;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 90%;
+            margin: 20px auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+        }
+        .header button {
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .header button:hover {
+            background-color: #f0f0f0;
+        }
+        .header .title {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .header .actions {
+            display: flex;
+            gap: 10px;
+        }
+        .content {
+            display: flex;
+            gap: 20px;
+        }
+        .meals-container {
+            flex: 2;
+        }
+        .day-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .day {
+            background-color: #e0f7fa;
+            border: 1px solid #00acc1;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+        .day.active {
+            background-color: #00acc1;
+            color: white;
+        }
+        .day-section {
+            display: none;
+        }
+        .day-section.active {
+            display: block;
+        }
+        .meal {
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .meal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .add-meal {
+            background-color: #e0f7fa;
+            border: 1px solid #00acc1;
+            border-radius: 5px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .totals {
+            flex: 1;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+        }
+        .total-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .day-header .rename-day {
+            cursor: pointer;
+        }
+        .rename-day-input {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 5px;
+            margin-right: 10px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            width: 50%;
+        }
+        .search-bar {
+            margin-bottom: 10px;
+        }
+        .search-bar input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .food-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+        }
+        .food-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .menu {
+    position: relative;
+    display: inline-block;
+}
+
+.menu-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    background-color: #fff;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+    border-radius: 5px;
+    z-index: 1;
+    right: 0;
+}
+
+.dropdown-menu button {
+    display: block;
+    background: none;
+    border: none;
+    padding: 8px;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+}
+
+.dropdown-menu button:hover {
+    background-color: #f0f0f0;
+}
+
+/* Show the dropdown on button click */
+.menu.active .dropdown-menu {
+    display: block;
+}
+
+@media only screen and (max-width: 600px) {
+    .container {
+        width: 100%;
+        padding: 10px;
+    }
+
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .header .actions {
+        margin-top: 10px;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .content {
+        flex-direction: column;
+    }
+
+    .totals, .meals-container {
+        width: 100%;
+    }
+
+    .day-selector {
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
+
+    .day {
+        width: 100%;
+        text-align: center;
+    }
+
+    .meal {
+        width: 100%;
+    }
+
+    .meal-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .menu {
+        position: static;
+    }
+
+    .dropdown-menu {
+        position: relative;
+        width: 100%;
+    }
+
+    .modal-content {
+        width: 90%;
+    }
+}
+
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            
+            <div class="title">Meal Planner</div>
+            <div class="actions">
+                <button><i class="fas fa-trash"></i> Clear</button>
+                <button style="background-color: #00acc1; color: white;" onclick="exportToPDF()"><i class="fas fa-share"></i> Export</button>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="meals-container" id="meals-container">
+                <div class="day-selector" id="day-selector">
+                    <button id="add-day-btn"><i class="fas fa-calendar-alt"></i> Add day</button>
+                </div>
+            </div>
+            <div class="totals">
+                <div class="totals-header">Daily totals</div>
+                <div class="totals-content" id="totals-content">
+                    <div class="total-item">
+                        <span>Calories</span>
+                        <span id="total-calories">0 kcal</span>
+                    </div>
+                    <div class="total-item">
+                        <span>Protein</span>                      
+                        <span id="total-protein">0 g</span>
+                        <span>Protein %</span>
+                        <span id="protein-percentage">0%</span>
+                    </div>
+                    <div class="total-item">
+                        <span>Carbs</span>
+                        <span id="total-carbs">0 g</span>
+                        <span>Carbs %</span>
+                        <span id="carbs-percentage">0%</span>
+                    </div>
+                    <div class="total-item">
+                        <span>Fat</span>
+                        <span id="total-fat">0 g</span>
+                        <span>Fat %</span>
+                        <span id="fat-percentage">0%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="mealModal">
+        <div class="modal-content">
+            <h2>Select Foods</h2>
+            <div class="search-bar">
+                <input type="text" id="search-input" placeholder="Search for foods...">
+            </div>
+            <div class="food-list" id="food-list">
+                <div class="food-item" data-name="75% Lean Ground Beef" data-calories="293" data-protein="16" data-carbs="0" data-fat="25">
+                    <span>75% Lean Ground Beef (100g)</span>
+                    <input type="checkbox">
+                </div>
+                <div class="food-item" data-name="Skinless Chicken Thigh" data-calories="110" data-protein="19" data-carbs="0" data-fat="4">
+                    <span>Skinless Chicken Thigh (100g)</span>
+                    <input type="checkbox">
+                </div>
+                <div class="food-item" data-name="Broccoli" data-calories="55" data-protein="3.7" data-carbs="11" data-fat="0.6">
+                    <span>Broccoli (100g)</span>
+                    <input type="checkbox">
+                </div>
+                <div class="food-item" data-name="Salmon" data-calories="208" data-protein="20" data-carbs="0" data-fat="13">
+                    <span>Salmon (100g)</span>
+                    <input type="checkbox">
+                </div>
+                <!-- Add more food items here as needed -->
+            </div>
+            <div class="actions">
+                <button class="cancel">Cancel</button>
+                <button class="add">Add</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const mealsContainer = document.getElementById('meals-container');
+        const daySelector = document.getElementById('day-selector');
+        const addDayBtn = document.getElementById('add-day-btn');
+        const modal = document.getElementById('mealModal');
+        const searchInput = document.getElementById('search-input');
+
+        // Clear Functionality
+document.querySelector('.fa-trash').parentElement.addEventListener('click', () => {
+    // Select and remove all day sections (visual part)
+    const daySections = document.querySelectorAll('.day-section');
+    daySections.forEach(section => section.remove());
+
+    // Select and remove all day buttons except the "Add Day" button
+    const dayButtons = document.querySelectorAll('.day');
+    dayButtons.forEach(button => {
+        if (button.id !== 'add-day-btn') {
+            button.remove();
+        }
+    });
+
+    // Reset totals to zero
+    document.getElementById('total-calories').textContent = '0 kcal';
+    document.getElementById('total-protein').textContent = '0 g';
+    document.getElementById('total-carbs').textContent = '0 g';
+    document.getElementById('total-fat').textContent = '0 g';
+    document.getElementById('protein-percentage').textContent = '0%';
+    document.getElementById('carbs-percentage').textContent = '0%';
+    document.getElementById('fat-percentage').textContent = '0%';
+
+    // Optionally clear any saved state in local storage or memory (if applicable)
+    // localStorage.removeItem('mealPlannerData'); // Uncomment if you're using local storage
+});
+
+
+
+        // Add a new day
+        addDayBtn.addEventListener('click', () => {
+            addNewDay();
+        });
+
+function addNewDay(dayName = '') {
+    const dayCount = mealsContainer.querySelectorAll('.day-section').length + 1;
+
+    // Create day button in day selector
+    const dayButton = document.createElement('button');
+    dayButton.classList.add('day');
+    dayButton.textContent = dayName ? dayName : `Day ${dayCount}`;
+    dayButton.addEventListener('click', () => switchDay(dayButton, daySection));
+    daySelector.insertBefore(dayButton, addDayBtn);
+
+    // Create day section
+    const daySection = document.createElement('div');
+    daySection.classList.add('day-section');
+    daySection.innerHTML = `
+        <div class="day">
+            <div class="day active">
+                <input class="rename-day-input" value="${dayName ? dayName : `Day ${dayCount}`}" />
+            </div>
+            <div class="menu">
+                <button class="menu-btn"><i class="fas fa-ellipsis-v"></i></button>
+                <div class="dropdown-menu">
+                    <button class="rename-day">Rename</button>
+                    <button class="duplicate-day">Duplicate</button>
+                    <button class="remove-day">Remove</button>
+                </div>
+                
+            </div>
+           <div> <button class="add-meal">Add meal</button></div>
+        </div>
+        
+        <div class="meals"></div>
+    `;
+    mealsContainer.appendChild(daySection);
+
+    // Show new day immediately
+    switchDay(dayButton, daySection);
+
+    // Handle dropdown menu
+    const menuBtn = daySection.querySelector('.menu-btn');
+    const menu = daySection.querySelector('.menu');
+    menuBtn.addEventListener('click', () => {
+        menu.classList.toggle('active');
+    });
+
+    // Rename day
+    const renameButton = daySection.querySelector('.rename-day');
+    renameButton.addEventListener('click', () => {
+        dayButton.textContent = daySection.querySelector('.rename-day-input').value;
+        menu.classList.remove('active'); // Hide dropdown after action
+    });
+
+    // Duplicate day
+    const duplicateButton = daySection.querySelector('.duplicate-day');
+    duplicateButton.addEventListener('click', () => {
+        duplicateDay(dayButton, daySection);
+        menu.classList.remove('active'); // Hide dropdown after action
+    });
+
+    // Remove day
+    const removeButton = daySection.querySelector('.remove-day');
+    removeButton.addEventListener('click', () => {
+        removeDay(dayButton, daySection);
+        menu.classList.remove('active'); // Hide dropdown after action
+    });
+
+    // Add meal event
+    daySection.querySelector('.add-meal').addEventListener('click', () => openModal(daySection.querySelector('.meals')));
+}
+
+// Click outside to close dropdown
+document.addEventListener('click', function (event) {
+    const openDropdowns = document.querySelectorAll('.menu.active');
+    openDropdowns.forEach(dropdown => {
+        if (!dropdown.contains(event.target)) {
+            dropdown.classList.remove('active');
+        }
+    });
+});
+
+
+        // Switch between days
+        function switchDay(dayButton, daySection) {
+            document.querySelectorAll('.day').forEach(button => button.classList.remove('active'));
+            document.querySelectorAll('.day-section').forEach(section => section.classList.remove('active'));
+
+            dayButton.classList.add('active');
+            daySection.classList.add('active');
+            updateTotals(daySection);
+        }
+
+        // Duplicate day
+        function duplicateDay(dayButton, daySection) {
+            const dayName = `${dayButton.textContent} (Copy)`;
+            addNewDay(dayName);
+
+            const newDaySection = mealsContainer.querySelector('.day-section:last-child .meals');
+            const clonedMeals = daySection.querySelector('.meals').cloneNode(true);
+            newDaySection.replaceChildren(...clonedMeals.children);
+        }
+
+        // Remove day
+        function removeDay(dayButton, daySection) {
+            dayButton.remove();
+            daySection.remove();
+            if (document.querySelectorAll('.day').length > 0) {
+                const firstDayButton = document.querySelector('.day');
+                const firstDaySection = document.querySelector('.day-section');
+                switchDay(firstDayButton, firstDaySection);
+            }
+        }
+
+       // Open modal to add meals
+       function openModal(mealContainer) {
+            modal.style.display = 'flex';
+
+            modal.querySelector('.add').onclick = function() {
+                const selectedFoods = modal.querySelectorAll('.food-item input:checked');
+                selectedFoods.forEach(foodCheckbox => {
+                    const foodItem = foodCheckbox.closest('.food-item');
+                    const meal = document.createElement('div');
+                    meal.classList.add('meal');
+                    meal.innerHTML = `
+                        <div class="meal-header">
+                            <div>${foodItem.dataset.name}</div>
+                            <div class="meal-info">
+                                <span>Calories ${foodItem.dataset.calories}kcal</span>
+                                <span>Protein ${foodItem.dataset.protein}g</span>
+                                <span>Carbs ${foodItem.dataset.carbs}g</span>
+                                <span>Fat ${foodItem.dataset.fat}g</span>
+                            </div>
+                        </div>
+                        <input type="number" value="100" data-calories="${foodItem.dataset.calories}" data-protein="${foodItem.dataset.protein}" data-carbs="${foodItem.dataset.carbs}" data-fat="${foodItem.dataset.fat}">
+                    `;
+                    mealContainer.appendChild(meal);
+
+                    // Add event listener to update meal data
+                    meal.querySelector('input').addEventListener('input', () => updateMeal(meal));
+                });
+
+                modal.style.display = 'none';
+                updateTotals(mealContainer.closest('.day-section'));
+            };
+
+            // Close modal
+            modal.querySelector('.cancel').onclick = function() {
+                modal.style.display = 'none';
+            };
+        }
+
+        // Search for food items
+        searchInput.addEventListener('input', function() {
+            const filter = searchInput.value.toLowerCase();
+            const foods = document.querySelectorAll('.food-item');
+
+            foods.forEach(food => {
+                const foodName = food.dataset.name.toLowerCase();
+                if (foodName.includes(filter)) {
+                    food.style.display = '';
+                } else {
+                    food.style.display = 'none';
+                }
+            });
+        });
+
+        // Update meal data when input changes
+        function updateMeal(meal) {
+            const input = meal.querySelector('input');
+            const grams = parseFloat(input.value);
+            const calories = (input.dataset.calories * grams) / 100;
+            const protein = (input.dataset.protein * grams) / 100;
+            const carbs = (input.dataset.carbs * grams) / 100;
+            const fat = (input.dataset.fat * grams) / 100;
+
+            const mealInfo = meal.querySelector('.meal-info');
+            mealInfo.innerHTML = `
+                <span>Calories ${calories.toFixed(1)}kcal</span>
+                <span>Protein ${protein.toFixed(1)}g</span>
+                <span>Carbs ${carbs.toFixed(1)}g</span>
+                <span>Fat ${fat.toFixed(1)}g</span>
+            `;
+
+            updateTotals(meal.closest('.day-section'));
+        }
+
+        // Update totals for current day
+        function updateTotals(daySection) {
+            let totalCalories = 0;
+            let totalProtein = 0;
+            let totalCarbs = 0;
+            let totalFat = 0;
+
+            daySection.querySelectorAll('.meal').forEach(meal => {
+                const mealInfo = meal.querySelector('.meal-info');
+                const calories = parseFloat(mealInfo.querySelector('span:nth-child(1)').textContent.split(' ')[1]);
+                const protein = parseFloat(mealInfo.querySelector('span:nth-child(2)').textContent.split(' ')[1]);
+                const carbs = parseFloat(mealInfo.querySelector('span:nth-child(3)').textContent.split(' ')[1]);
+                const fat = parseFloat(mealInfo.querySelector('span:nth-child(4)').textContent.split(' ')[1]);
+
+                totalCalories += calories;
+                totalProtein += protein;
+                totalCarbs += carbs;
+                totalFat += fat;
+            });
+
+            document.getElementById('total-calories').textContent = `${totalCalories.toFixed(1)} kcal`;
+            document.getElementById('total-protein').textContent = `${totalProtein.toFixed(1)} g`;
+            document.getElementById('total-carbs').textContent = `${totalCarbs.toFixed(1)} g`;
+            document.getElementById('total-fat').textContent = `${totalFat.toFixed(1)} g`;
+
+            // Calculate percentage
+            const totalMacros = totalProtein * 4 + totalCarbs * 4 + totalFat * 9;
+            if (totalMacros > 0) {
+                document.getElementById('protein-percentage').textContent = `${((totalProtein * 4) / totalMacros * 100).toFixed(1)}%`;
+                document.getElementById('carbs-percentage').textContent = `${((totalCarbs * 4) / totalMacros * 100).toFixed(1)}%`;
+                document.getElementById('fat-percentage').textContent = `${((totalFat * 9) / totalMacros * 100).toFixed(1)}%`;
+            } else {
+                document.getElementById('protein-percentage').textContent = '0%';
+                document.getElementById('carbs-percentage').textContent = '0%';
+                document.getElementById('fat-percentage').textContent = '0%';
+            }
+        }
+        
+
+function exportToPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    let yPosition = 10; // Y position for vertical movement
+
+    // Get all day-sections
+    const daySections = document.querySelectorAll('.day-section');
+
+    if (daySections.length === 0) {
+        alert('No days to export!');
+        return;
+    }
+
+    // Loop through each day section
+    daySections.forEach((daySection, index) => {
+        const dayHeader = daySection.querySelector('.rename-day-input').value;
+        
+        // Section Title (e.g., Day 1)
+        doc.setFontSize(16);
+        doc.text(`Day ${index + 1}: ${dayHeader}`, 10, yPosition);
+        yPosition += 10;
+
+        // Fetch the daily totals from the right panel for this day
+        const totalCalories = document.getElementById('total-calories').textContent;
+        const totalProtein = document.getElementById('total-protein').textContent;
+        const totalCarbs = document.getElementById('total-carbs').textContent;
+        const totalFat = document.getElementById('total-fat').textContent;
+        const proteinPercentage = document.getElementById('protein-percentage').textContent;
+        const carbsPercentage = document.getElementById('carbs-percentage').textContent;
+        const fatPercentage = document.getElementById('fat-percentage').textContent;
+
+        // Daily Totals (printed horizontally)
+        doc.setFontSize(12);
+        doc.text(`Calories: ${totalCalories} | Protein: ${totalProtein} | Carbs: ${totalCarbs} | Fat: ${totalFat}`, 10, yPosition);
+        yPosition += 7; // Move down a bit for percentages
+        doc.text(`Protein %: ${proteinPercentage} | Carbs %: ${carbsPercentage} | Fat %: ${fatPercentage}`, 10, yPosition);
+        yPosition += 10; // Space before meals
+
+        // List of meals
+        const meals = daySection.querySelectorAll('.meal');
+        if (meals.length === 0) {
+            doc.setFontSize(12);
+            doc.text('No meals added.', 10, yPosition);
+            yPosition += 10;
+        } else {
+            meals.forEach(meal => {
+                const mealName = meal.querySelector('.meal-header div').textContent;
+                const mealInfo = meal.querySelector('.meal-info').textContent;
+
+                doc.setFontSize(12);
+
+                // Print meal name
+                doc.text(`${mealName}:`, 10, yPosition);
+                yPosition += 7; // Slight gap for meal info
+
+                // Split meal info text to fit horizontally and prevent overflow
+                const splitMealInfo = doc.splitTextToSize(mealInfo, 180); // 180 for horizontal fit
+
+                // Print meal information
+                doc.text(splitMealInfo, 10, yPosition);
+
+                // Adjust yPosition to account for multi-line meal info
+                yPosition += splitMealInfo.length * 7; // For each line, move down 7px
+            });
+        }
+
+        // Add space after each day's meals and totals
+        yPosition += 10;
+
+        // Check if yPosition goes beyond the page height, if so add a new page
+        if (yPosition > 270) {
+            doc.addPage();
+            yPosition = 10; // Reset yPosition on new page
+        }
+    });
+
+    // Save the PDF with a filename
+    doc.save('meal-planner.pdf');
+}
+
+
+
+    </script>
+</body>
+</html>
